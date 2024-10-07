@@ -1,4 +1,3 @@
-# server/app.py
 #!/usr/bin/env python3
 
 from flask import Flask, make_response
@@ -14,14 +13,28 @@ app.json.compact = False
 migrate = Migrate(app, db)
 db.init_app(app)
 
-
 @app.route('/')
 def index():
     body = {'message': 'Flask SQLAlchemy Lab 1'}
     return make_response(body, 200)
 
-# Add views here
+# View to get an earthquake by ID
+@app.route('/earthquakes/<int:id>', methods=['GET'])
+def get_earthquake_by_id(id):
+    earthquake = Earthquake.query.filter_by(id=id).first()
+    if earthquake:
+        return make_response(earthquake.to_dict(), 200)
+    else:
+        return make_response({"message": f"Earthquake {id} not found."}, 404)
 
+# View to get earthquakes by minimum magnitude
+@app.route('/earthquakes/magnitude/<float:magnitude>', methods=['GET'])
+def get_earthquakes_by_magnitude(magnitude):
+    quakes = Earthquake.query.filter(Earthquake.magnitude >= magnitude).all()
+    return make_response({
+        "count": len(quakes),
+        "quakes": [quake.to_dict() for quake in quakes]
+    }, 200)
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
